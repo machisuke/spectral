@@ -33,6 +33,31 @@ describe('duplicated-entry-in-enum', () => {
       expect(results).toEqual([]);
     });
 
+    test('does not report anything when enum is an object property', async () => {
+      const doc = {
+        openapi: '3.0.2',
+        components: {
+          schemas: {
+            schema: {
+              type: 'object',
+              properties: {
+                enum: {
+                  type: 'array',
+                  items: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const results = await s.run(doc);
+
+      expect(results).toEqual([]);
+    });
+
     test('identifies enum with duplicated entries', async () => {
       const doc = {
         swagger: '2.0',
@@ -49,7 +74,7 @@ describe('duplicated-entry-in-enum', () => {
       expect(results).toEqual([
         {
           code: 'duplicated-entry-in-enum',
-          message: `A duplicated entry in the enum was found. Error: \`enum\` property should not have duplicate items (items ## 1 and 5 are identical)`,
+          message: `A duplicated entry in the enum was found. Error: \`enum\` property must not have duplicate items (items ## 1 and 5 are identical)`,
           path: ['definitions', 'Test', 'enum'],
           range: expect.any(Object),
           severity: DiagnosticSeverity.Warning,
@@ -103,7 +128,7 @@ describe('duplicated-entry-in-enum', () => {
       expect(results).toEqual([
         {
           code: 'duplicated-entry-in-enum',
-          message: `A duplicated entry in the enum was found. Error: \`enum\` property should not have duplicate items (items ## 1 and 5 are identical)`,
+          message: `A duplicated entry in the enum was found. Error: \`enum\` property must not have duplicate items (items ## 1 and 5 are identical)`,
           path: ['components', 'schemas', 'Test', 'enum'],
           range: expect.any(Object),
           severity: DiagnosticSeverity.Warning,

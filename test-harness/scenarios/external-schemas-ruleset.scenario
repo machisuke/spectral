@@ -9,9 +9,10 @@ info:
 {bin} lint {document} --ruleset ./rulesets/external-schemas-ruleset.yaml
 ====stdout====
 OpenAPI 3.x detected
+OpenAPI 3.0.x detected
 
 {document}
- 3:10  error  info-title        `title` property should be equal to one of the allowed values: `Stoplight`, `Stoplight.io`, `StoplightIO`. Did you mean `Stoplight`?  info.title
- 4:16  error  info-description  `description` property should be equal to one of the allowed values: `foo`, `foo-bar`, `bar-foo`                                      info.description
+ 3:10  error  info-title        `title` property must be equal to one of the allowed values: `Stoplight`, `Stoplight.io`, `StoplightIO`. Did you mean `Stoplight`?  info.title
+ 4:16  error  info-description  `description` property must be equal to one of the allowed values: `foo`, `foo-bar`, `bar-foo`                                      info.description
 
 ✖ 2 problems (2 errors, 0 warnings, 0 infos, 0 hints)

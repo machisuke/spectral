@@ -7,6 +7,7 @@ import { Spectral } from '../spectral';
 import { httpAndFileResolver } from '../resolvers/http-and-file';
 import { Parsers, Document } from '..';
 import { IParser } from '../parsers/types';
+import { createWithRules } from '../rulesets/oas/__tests__/__helpers__/createWithRules';
 
 const invalidSchema = JSON.stringify(require('./__fixtures__/petstore.invalid-schema.oas3.json'));
 const todosInvalid = JSON.stringify(require('./__fixtures__/todos.invalid.oas2.json'));
@@ -84,7 +85,7 @@ describe('linter', () => {
     return expect(results).toEqual([
       {
         code: 'rule2',
-        message: '`foo` property is not truthy',
+        message: '`foo` property must be truthy',
         path: ['foo'],
         range: expect.any(Object),
         severity: DiagnosticSeverity.Warning,
@@ -683,19 +684,19 @@ responses:: !!foo
   });
 
   test('should remove all redundant ajv errors', async () => {
-    spectral.registerFormat('oas2', isOpenApiv2);
-    spectral.registerFormat('oas3', isOpenApiv3);
-    await spectral.loadRuleset('spectral:oas');
+    const spectral = await createWithRules(['oas3-schema', 'oas3-valid-schema-example', 'oas3-valid-media-example']);
 
     const result = await spectral.run(invalidSchema);
 
     expect(result).toEqual([
       expect.objectContaining({
-        code: 'operation-tag-defined',
+        code: 'oas3-schema',
+        message: '`email` property must match format `email`.',
+        path: ['info', 'contact', 'email'],
       }),
       expect.objectContaining({
         code: 'oas3-schema',
-        message: '`header-1` property should have required property `schema`.',
+        message: '`header-1` property must have required property `schema`.',
         path: ['paths', '/pets', 'get', 'responses', '200', 'headers', 'header-1'],
       }),
       expect.objectContaining({
@@ -715,27 +716,15 @@ responses:: !!foo
         code: 'invalid-ref',
       }),
       expect.objectContaining({
-        code: 'oas3-unused-component',
-        message: 'Potentially unused component has been detected.',
-        path: ['components', 'schemas', 'Pets'],
-      }),
-      expect.objectContaining({
-        code: 'oas3-unused-component',
-        message: 'Potentially unused component has been detected.',
-        path: ['components', 'schemas', 'foo'],
-      }),
-      expect.objectContaining({
         code: 'oas3-valid-schema-example',
-        message: '`example` property type should be number',
+        message: '`example` property type must be number',
         path: ['components', 'schemas', 'foo', 'example'],
       }),
     ]);
   });
 
   test('should preserve sibling additionalProperties errors', async () => {
-    spectral.registerFormat('oas2', isOpenApiv2);
-    spectral.registerFormat('oas3', isOpenApiv3);
-    await spectral.loadRuleset('spectral:oas');
+    const spectral = await createWithRules(['oas3-schema']);
 
     const result = await spectral.run(invalidStatusCodes);
 
@@ -1213,13 +1202,13 @@ responses:: !!foo
       ).resolves.toEqual([
         expect.objectContaining({
           code: 'header-parameter-names-kebab-case',
-          message: '"fooA" is not kebab-cased: must match the pattern \'^[a-z0-9]+((-[a-z0-9]+)+)?$\'',
+          message: '"fooA" is not kebab-cased: "fooA" must match the pattern "^[a-z0-9]+((-[a-z0-9]+)+)?$"',
           path: ['parameters', '0', 'name'],
         }),
 
         expect.objectContaining({
           code: 'header-parameter-names-kebab-case',
-          message: '"d 1" is not kebab-cased: must match the pattern \'^[a-z0-9]+((-[a-z0-9]+)+)?$\'',
+          message: '"d 1" is not kebab-cased: "d 1" must match the pattern "^[a-z0-9]+((-[a-z0-9]+)+)?$"',
           path: ['foo', 'parameters', '0', 'name'],
         }),
       ]);
@@ -1435,7 +1424,7 @@ responses:: !!foo
     expect(results).toEqual([
       {
         code: 'falsy-foo',
-        message: '`foo` property is not falsy',
+        message: '`foo` property must be falsy',
         path: ['0', 'foo'],
         range: expect.any(Object),
         severity: DiagnosticSeverity.Warning,

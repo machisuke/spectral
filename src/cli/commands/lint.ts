@@ -1,15 +1,13 @@
-import { Dictionary } from '@stoplight/types';
+import { Dictionary, Optional } from '@stoplight/types';
 import { pick } from 'lodash';
 import { ReadStream } from 'tty';
-import { CommandModule, showHelp } from 'yargs';
+import type { CommandModule } from 'yargs';
 
 import { getDiagnosticSeverity } from '../../ruleset';
 import { IRuleResult } from '../../types';
 import { FailSeverity, ILintConfig, OutputFormat } from '../../types/config';
 import { lint } from '../services/linter';
 import { formatOutput, writeOutput } from '../services/output';
-
-const toArray = (args: unknown): unknown[] => (Array.isArray(args) ? args : [args]);
 
 const formatOptions = Object.values(OutputFormat);
 
@@ -22,10 +20,9 @@ const lintCommand: CommandModule = {
       .positional('documents', {
         description:
           'Location of JSON/YAML documents. Can be either a file, a glob or fetchable resource(s) on the web.',
-        type: 'string',
         coerce(values) {
-          if (values.length > 0) {
-            return values;
+          if (Array.isArray(values) && values.length > 0) {
+            return values as unknown[];
           }
 
           // https://stackoverflow.com/questions/39801643/detect-if-node-receives-stdin
@@ -38,16 +35,13 @@ const lintCommand: CommandModule = {
           return [(process.stdin as ReadStream & { fd: 0 }).fd];
         },
       })
-      .fail(() => {
-        showHelp();
-      })
       .check((argv: Dictionary<unknown>) => {
         if (argv.format !== void 0 && !(formatOptions as string[]).includes(String(argv.format))) {
-          return false;
+          throw new TypeError('Unspecified format');
         }
 
         if (!Array.isArray(argv.documents) || argv.documents.length === 0) {
-          return false;
+          throw new TypeError('No documents provided.');
         }
 
         return true;
@@ -79,13 +73,10 @@ const lintCommand: CommandModule = {
           alias: 'r',
           description: 'path/URL to a ruleset file',
           type: 'string',
-          coerce: toArray,
-        },
-        'skip-rule': {
-          alias: 's',
-          description: 'ignore certain rules if they are causing trouble',
-          type: 'string',
-          coerce: toArray,
+          coerce(value): Optional<string[]> {
+            if (value === void 0) return;
+            return (Array.isArray(value) ? value : [value]).map<string>(String);
+          },
         },
         'fail-severity': {
           alias: 'F',
@@ -104,12 +95,6 @@ const lintCommand: CommandModule = {
           description: 'do not warn about unmatched formats',
           type: 'boolean',
           default: false,
-        },
-        'show-unmatched-globs': {
-          description: 'show unmatched glob patterns',
-          type: 'boolean',
-          default: false,
-          deprecated: 'use --fail-on-unmatched-globs',
         },
         'fail-on-unmatched-globs': {
           description: 'fail on unmatched glob patterns',
@@ -138,7 +123,6 @@ const lintCommand: CommandModule = {
       output,
       encoding,
       ignoreUnknownFormat,
-      showUnmatchedGlobs,
       failOnUnmatchedGlobs,
       ...config
     } = (args as unknown) as ILintConfig & {
@@ -153,9 +137,8 @@ const lintCommand: CommandModule = {
       encoding,
       ignoreUnknownFormat,
       failOnUnmatchedGlobs,
-      showUnmatchedGlobs,
       ruleset,
-      ...pick<Partial<ILintConfig>, keyof ILintConfig>(config, ['skipRule', 'verbose', 'quiet', 'resolver']),
+      ...pick<Partial<ILintConfig>, keyof ILintConfig>(config, ['verbose', 'quiet', 'resolver']),
     })
       .then(results => {
         if (displayOnlyFailures) {

@@ -3,6 +3,7 @@
   "formats": ["oas2", "oas3"],
   "functions": [
     "oasDocumentSchema",
+    "oasSchema",
     "oasExample",
     "oasOpSuccessResponse",
     "oasOpFormDataConsumeCheck",
@@ -104,11 +105,20 @@
       "message": "A duplicated entry in the enum was found. Error: {{error}}",
       "given": "$..enum",
       "then": {
-        "function": "schema",
+        "function": "oasSchema",
         "functionOptions": {
           "schema": {
-            "type": "array",
-            "uniqueItems": true
+            "oneOf": [
+              {
+                "type": "array",
+                "uniqueItems": true
+              },
+              {
+                "not": {
+                  "type": "array"
+                }
+              }
+            ]
           }
         }
       }
@@ -199,6 +209,7 @@
         "field": "tags",
         "function": "schema",
         "functionOptions": {
+          "dialect": "draft7",
           "schema": {
             "type": "array",
             "minItems": 1
@@ -312,6 +323,7 @@
       }
     },
     "no-$ref-siblings": {
+      "formats": ["oas2.0", "oas3.0"],
       "description": "Property cannot be placed among $ref",
       "message": "{{error}}",
       "type": "validation",
@@ -328,7 +340,7 @@
       "message": "{{error}}",
       "recommended": true,
       "type": "validation",
-      "given": "$..[?(@.enum && @.type)]",
+      "given": "$..[?(@ && @.enum && @.type)]",
       "then": {
         "function": "typedEnum"
       }
@@ -354,6 +366,7 @@
         "field": "schemes",
         "function": "schema",
         "functionOptions": {
+          "dialect": "draft7",
           "schema": {
             "items": {
               "type": "string"
@@ -485,13 +498,7 @@
       "type": "validation",
       "given": "$",
       "then": {
-        "function": "oasDocumentSchema",
-        "functionOptions": {
-          "allErrors": true,
-          "schema": {
-            "$ref": "./schemas/schema.oas2.json"
-          }
-        }
+        "function": "oasDocumentSchema"
       }
     },
     "oas2-unused-definition": {
@@ -518,6 +525,7 @@
         "field": "servers",
         "function": "schema",
         "functionOptions": {
+          "dialect": "draft7",
           "schema": {
             "items": {
               "type": "object"
@@ -650,13 +658,7 @@
       "type": "validation",
       "given": "$",
       "then": {
-        "function": "oasDocumentSchema",
-        "functionOptions": {
-          "allErrors": true,
-          "schema": {
-            "$ref": "./schemas/schema.oas3.json"
-          }
-        }
+        "function": "oasDocumentSchema"
       }
     },
     "oas3-unused-component": {

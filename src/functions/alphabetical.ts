@@ -1,5 +1,7 @@
 import { isObject } from 'lodash';
 import { IFunction } from '../types';
+import { printValue } from '../utils/printValue';
+import { isPlainObject } from '../guards/isPlainObject';
 
 export interface IAlphaRuleOptions {
   /** if sorting array of objects, which key to use for comparison */
@@ -28,17 +30,33 @@ const getUnsortedItems = <T>(arr: T[], compareFn: (a: T, B: T) => number): null 
   return null;
 };
 
+function isStringOrNumber(maybeStringOrNumber: unknown): maybeStringOrNumber is string | number {
+  return typeof maybeStringOrNumber === 'string' || typeof maybeStringOrNumber === 'number';
+}
+
+function isValidArray(arr: unknown[]): arr is (number | string)[] {
+  return arr.every(isStringOrNumber);
+}
+
 export const alphabetical: IFunction<IAlphaRuleOptions | null> = (targetVal, opts, paths, { documentInventory }) => {
   if (!isObject(targetVal)) return;
 
-  let targetArray: any[] | string[];
+  let targetArray: unknown[];
 
   if (Array.isArray(targetVal)) {
     targetArray = targetVal;
+  } else if (isPlainObject(targetVal)) {
+    targetArray = Object.keys(
+      documentInventory
+        .findAssociatedItemForPath(paths.given, true)
+        ?.document.trapAccess<typeof targetVal>(targetVal) ?? targetVal,
+    );
   } else {
-    targetVal =
-      documentInventory.findAssociatedItemForPath(paths.given, true)?.document.trapAccess(targetVal) ?? targetVal;
-    targetArray = Object.keys(targetVal);
+    return [
+      {
+        message: '#{{print("property")}}must be an object or an array',
+      },
+    ];
   }
 
   if (targetArray.length < 2) {
@@ -47,18 +65,32 @@ export const alphabetical: IFunction<IAlphaRuleOptions | null> = (targetVal, opt
 
   const keyedBy = opts?.keyedBy;
 
-  const unsortedItems = getUnsortedItems<unknown>(
-    targetArray,
-    keyedBy !== void 0
-      ? (a, b): number => {
-          if (!isObject(a) || !isObject(b)) return 0;
+  if (keyedBy !== void 0) {
+    const _targetArray: (string | number)[] = [];
+    for (const item of targetArray) {
+      if (!isObject(item)) {
+        return [
+          {
+            message: '#{{print("property")}}must be an object',
+          },
+        ];
+      }
 
-          return compare(a[keyedBy], b[keyedBy]);
-        }
-      : // If we aren't expecting an object keyed by a specific property, then treat the
-        // object as a simple array.
-        compare,
-  );
+      _targetArray.push(item[keyedBy]);
+    }
+
+    targetArray = _targetArray;
+  }
+
+  if (!isValidArray(targetArray)) {
+    return [
+      {
+        message: '#{{print("property")}}must be one of the allowed types: number, string',
+      },
+    ];
+  }
+
+  const unsortedItems = getUnsortedItems(targetArray, compare);
 
   if (unsortedItems != null) {
     const path = paths.target ?? paths.given;
@@ -71,10 +103,10 @@ export const alphabetical: IFunction<IAlphaRuleOptions | null> = (targetVal, opt
           : null),
         message:
           keyedBy !== void 0
-            ? 'properties are not in alphabetical order'
-            : `at least 2 properties are not in alphabetical order: "${
-                targetArray[unsortedItems[0]]
-              }" should be placed after "${targetArray[unsortedItems[1]]}"`,
+            ? 'properties must follow the alphabetical order'
+            : `${printValue(targetArray[unsortedItems[0]])} must be placed after ${printValue(
+                targetArray[unsortedItems[1]],
+              )}`,
       },
     ];
   }

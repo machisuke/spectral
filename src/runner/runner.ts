@@ -59,9 +59,9 @@ const runRule = (
           lintNode(
             context,
             {
-              // @ts-expect-error
-              // this is needed due to broken typings in jsonpath-plus (JSONPathClass.toPathArray is correct from typings point of view, but JSONPathClass is not exported, so it fails at runtime)
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call
               path: JSONPath.toPathArray(result.path),
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               value: result.value,
             },
             rule,

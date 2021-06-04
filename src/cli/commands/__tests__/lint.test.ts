@@ -77,15 +77,9 @@ describe('lint', () => {
         encoding: 'utf8',
         format: 'stylish',
         ignoreUnknownFormat: false,
-        showUnmatchedGlobs: false,
         failOnUnmatchedGlobs: false,
       });
     });
-  });
-
-  it('shows help when invalid arguments are passed', async () => {
-    const output = await run('lint --foo');
-    expect(output).toContain('documents  Location of JSON/YAML documents. Can be either a file, a glob or');
   });
 
   it('calls lint with document and default options', async () => {
@@ -95,7 +89,6 @@ describe('lint', () => {
       encoding: 'utf8',
       format: 'stylish',
       ignoreUnknownFormat: false,
-      showUnmatchedGlobs: false,
       failOnUnmatchedGlobs: false,
     });
   });
@@ -107,7 +100,6 @@ describe('lint', () => {
       encoding: 'utf16',
       format: 'stylish',
       ignoreUnknownFormat: false,
-      showUnmatchedGlobs: false,
       failOnUnmatchedGlobs: false,
     });
   });
@@ -119,7 +111,6 @@ describe('lint', () => {
       encoding: 'utf16',
       format: 'json',
       ignoreUnknownFormat: false,
-      showUnmatchedGlobs: false,
       failOnUnmatchedGlobs: false,
     });
   });
@@ -151,36 +142,14 @@ describe('lint', () => {
 
   it.each(['json', 'stylish'])('calls formatOutput with %s format', async format => {
     await run(`lint -f ${format} ./__fixtures__/empty-oas2-document.json`);
-    // needed by Node 8 (different ticking?) - can be simplified once we drop support for version 8
-    await new Promise(resolve => {
-      setImmediate(() => {
-        expect(formatOutput).toBeCalledWith(results, format, { failSeverity: DiagnosticSeverity.Error });
-        resolve();
-      });
-    });
+    await new Promise(resolve => void process.nextTick(resolve));
+    expect(formatOutput).toBeCalledWith(results, format, { failSeverity: DiagnosticSeverity.Error });
   });
 
   it('writes formatted output to a file', async () => {
     await run(`lint -o foo.json ./__fixtures__/empty-oas2-document.json`);
-    // needed by Node 8 (different ticking?) - can be simplified once we drop support for version 8
-    await new Promise(resolve => {
-      setImmediate(() => {
-        expect(writeOutput).toBeCalledWith('<formatted output>', 'foo.json');
-        resolve();
-      });
-    });
-  });
-
-  it('passes skip-rule to lint', async () => {
-    await run('lint --skip-rule foo --skip-rule bar ./__fixtures__/empty-oas2-document.json');
-    expect(lint).toHaveBeenCalledWith([expect.any(String)], {
-      skipRule: ['foo', 'bar'],
-      encoding: 'utf8',
-      format: 'stylish',
-      ignoreUnknownFormat: false,
-      showUnmatchedGlobs: false,
-      failOnUnmatchedGlobs: false,
-    });
+    await new Promise(resolve => void process.nextTick(resolve));
+    expect(writeOutput).toBeCalledWith('<formatted output>', 'foo.json');
   });
 
   it('passes ignore-unknown-format to lint', async () => {
@@ -189,18 +158,6 @@ describe('lint', () => {
       encoding: 'utf8',
       format: 'stylish',
       ignoreUnknownFormat: true,
-      showUnmatchedGlobs: false,
-      failOnUnmatchedGlobs: false,
-    });
-  });
-
-  it('passes show-unmatched-globs to lint', async () => {
-    await run('lint --show-unmatched-globs ./__fixtures__/empty-oas2-document.json');
-    expect(lint).toHaveBeenCalledWith([expect.any(String)], {
-      encoding: 'utf8',
-      format: 'stylish',
-      ignoreUnknownFormat: false,
-      showUnmatchedGlobs: true,
       failOnUnmatchedGlobs: false,
     });
   });
@@ -211,7 +168,6 @@ describe('lint', () => {
       encoding: 'utf8',
       format: 'stylish',
       ignoreUnknownFormat: false,
-      showUnmatchedGlobs: false,
       failOnUnmatchedGlobs: true,
     });
   });
@@ -225,18 +181,9 @@ describe('lint', () => {
   it('prints error message upon exception', async () => {
     const error = new Error('Failure');
     (lint as jest.Mock).mockReset();
-    (lint as jest.Mock).mockReturnValueOnce({
-      // could be mockRejectedValueOnce, but Node 8 does not like it (different ticking?), so here is the workaround
-      then() {
-        return this;
-      },
-      catch(fn: Function) {
-        fn(error);
-        return this;
-      },
-    });
-
+    (lint as jest.Mock).mockRejectedValueOnce(error);
     await run(`lint -o foo.json ./__fixtures__/empty-oas2-document.json`);
+    await new Promise(resolve => void process.nextTick(resolve));
     expect(errorSpy).toBeCalledWith('Failure');
   });
 });

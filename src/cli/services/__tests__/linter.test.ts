@@ -2,7 +2,6 @@ import { join, resolve } from '@stoplight/path';
 import * as nock from 'nock';
 import * as yargs from 'yargs';
 import { ValidationError } from '../../../ruleset/validation';
-import { ILintConfig } from '../../../types/config';
 import lintCommand from '../../commands/lint';
 import { lint } from '../linter';
 import * as http from 'http';
@@ -26,9 +25,18 @@ const invalidOas3SpecPath = resolve(__dirname, '__fixtures__/openapi-3.0-no-cont
 const fooResolver = resolve(__dirname, '__fixtures__/foo-resolver.js');
 const fooDocument = resolve(__dirname, '__fixtures__/foo-document.yaml');
 
-function run(command: string) {
+async function run(command: string) {
   const parser = yargs.command(lintCommand);
-  const { documents, ...opts } = (parser.parse(command) as unknown) as ILintConfig & { documents: string[] };
+  const { documents, ...opts } = await new Promise<any>((resolve, reject) => {
+    parser.parse(command, {}, (err, argv) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(argv);
+      }
+    });
+  });
+
   return lint(documents, opts);
 }
 
@@ -128,24 +136,6 @@ describe('Linter service', () => {
             expect.objectContaining({ code: 'info-contact' }),
           ]),
         );
-      });
-
-      describe('and --skip-rule=info-contact is set', () => {
-        it('output other warnings but not info-contact', async () => {
-          const output = await run(`lint --skip-rule=info-contact ${document}`);
-
-          expect(output).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'oas3-api-servers' })]));
-          expect(output).toEqual(expect.not.arrayContaining([expect.objectContaining({ code: 'info-contact' })]));
-        });
-      });
-
-      describe('and --skip-rule=info-contact --skip-rule=oas3-api-servers is set', () => {
-        it('outputs neither info-contact or oas3-api-servers', async () => {
-          const output = await run(`lint --skip-rule=info-contact --skip-rule=oas3-api-servers ${document}`);
-
-          expect(output).toEqual(expect.not.arrayContaining([expect.objectContaining({ code: 'info-contact' })]));
-          expect(output).toEqual(expect.not.arrayContaining([expect.objectContaining({ code: 'oas3-api-servers' })]));
-        });
       });
     });
   });
@@ -581,7 +571,7 @@ describe('Linter service', () => {
         }),
         expect.objectContaining({
           code: 'oas2-schema',
-          message: '`info` property should have required property `title`.',
+          message: '`info` property must have required property `version`.',
           path: ['definitions', 'info'],
           range: {
             end: {
@@ -629,7 +619,7 @@ describe('Linter service', () => {
         }),
         expect.objectContaining({
           code: 'oas2-schema',
-          message: '`description` property type should be string.',
+          message: '`description` property type must be string.',
           path: ['definitions', 'info', 'description'],
           range: {
             end: {
@@ -657,7 +647,7 @@ describe('Linter service', () => {
         }),
         expect.objectContaining({
           code: 'oas2-schema',
-          message: '`info` property should have required property `title`.',
+          message: '`info` property must have required property `version`.',
           path: [],
           range: {
             end: {
@@ -689,7 +679,7 @@ describe('Linter service', () => {
         }),
         expect.objectContaining({
           code: 'oas2-schema',
-          message: '`description` property type should be string.', // this is covered by 'info-description' as well
+          message: '`description` property type must be string.', // this is covered by 'info-description' as well
           path: ['description'],
           range: {
             end: {
@@ -705,7 +695,7 @@ describe('Linter service', () => {
         }),
         expect.objectContaining({
           code: 'oas2-schema',
-          message: '`get` property should have required property `responses`.',
+          message: '`get` property must have required property `responses`.',
           path: ['paths', '/test', 'get'],
           range: {
             end: {
