@@ -1,6 +1,10 @@
 import typescript from 'rollup-plugin-typescript2';
 import * as path from 'path';
 import * as fs from 'fs';
+import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
+import { terser } from 'rollup-plugin-terser';
 
 const BASE_PATH = process.cwd();
 
@@ -32,12 +36,15 @@ module.exports = functions.map(fn => ({
     typescript({
       tsconfig: path.join(BASE_PATH, './tsconfig.rollup.json'),
       include: ['dist/**/*.{ts,tsx}'],
-      check: false,
     }),
+    resolve(),
+    commonjs(),
+    json(),
+    terser(),
   ],
   output: {
     file: fn,
-    format: 'es',
+    format: 'cjs',
     exports: 'named',
   },
 }));
