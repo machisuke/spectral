@@ -1,16 +1,16 @@
 import { Dictionary } from '@stoplight/types';
-import { pick } from 'lodash';
 import { ReadStream } from 'tty';
 import type { CommandModule } from 'yargs';
 
-import { getDiagnosticSeverity, IRuleResult } from '@stoplight/spectral-core';
-import { lint } from '../services/linter';
-import { formatOutput, writeOutput } from '../services/output';
-import { FailSeverity, ILintConfig, OutputFormat } from '../services/config';
+import { getDiagnosticSeverity, HumanReadableDiagnosticSeverity, IRuleResult } from '@stoplight/spectral-core';
+import { lint } from '../../services/linter';
+import { formatOutput, writeOutput } from '../../services/linter/output';
+import { ILintConfig, OutputFormat } from './types';
+import { IRulesetMigrateConfig } from '../ruleset/types';
 
 const formatOptions = Object.values(OutputFormat);
 
-const lintCommand: CommandModule = {
+export default <CommandModule<ILintConfig & IRulesetMigrateConfig, ILintConfig>>{
   describe: 'lint JSON/YAML documents from files or URLs',
   command: 'lint [documents..]',
   builder: yargs =>
@@ -105,42 +105,27 @@ const lintCommand: CommandModule = {
           alias: 'v',
           description: 'increase verbosity',
           type: 'boolean',
+          default: false,
         },
         quiet: {
           alias: 'q',
           description: 'no logging - output only',
           type: 'boolean',
+          default: false,
         },
       }),
 
   handler: args => {
-    const {
-      documents,
-      failSeverity,
-      displayOnlyFailures,
-      ruleset,
-      stdinFilepath,
-      format,
-      output,
-      encoding,
-      ignoreUnknownFormat,
-      failOnUnmatchedGlobs,
-      ...config
-    } = args as unknown as ILintConfig & {
-      documents: Array<number | string>;
-      failSeverity: FailSeverity;
-      displayOnlyFailures: boolean;
-    };
+    const { documents, failSeverity, displayOnlyFailures, format, output, verbose } = args;
 
     return lint(documents, {
-      format,
-      output,
-      encoding,
-      ignoreUnknownFormat,
-      failOnUnmatchedGlobs,
-      ruleset,
-      stdinFilepath,
-      ...pick<Partial<ILintConfig>, keyof ILintConfig>(config, ['verbose', 'quiet', 'resolver']),
+      encoding: args.encoding,
+      failOnUnmatchedGlobs: args.failOnUnmatchedGlobs,
+      ignoreUnknownFormat: args.ignoreUnknownFormat,
+      ruleset: args.ruleset,
+      resolver: args.resolver,
+      stdinFilepath: args.stdinFilepath,
+      verbose: verbose,
     })
       .then(results => {
         if (displayOnlyFailures) {
@@ -151,7 +136,8 @@ const lintCommand: CommandModule = {
       .then(results => {
         if (results.length > 0) {
           process.exitCode = severeEnoughToFail(results, failSeverity) ? 1 : 0;
-        } else if (config.quiet !== true) {
+        } else if (!args.quiet) {
+          // eslint-disable-next-line no-console
           console.log(`No results with a severity of '${failSeverity}' or higher found!`);
         }
         const formattedOutput = formatOutput(results, format, { failSeverity: getDiagnosticSeverity(failSeverity) });
@@ -162,18 +148,20 @@ const lintCommand: CommandModule = {
 };
 
 const fail = ({ message }: Error): void => {
+  // eslint-disable-next-line no-console
   console.error(message);
   process.exitCode = 2;
 };
 
-const filterResultsBySeverity = (results: IRuleResult[], failSeverity: FailSeverity): IRuleResult[] => {
+const filterResultsBySeverity = (
+  results: IRuleResult[],
+  failSeverity: HumanReadableDiagnosticSeverity,
+): IRuleResult[] => {
   const diagnosticSeverity = getDiagnosticSeverity(failSeverity);
   return results.filter(r => r.severity <= diagnosticSeverity);
 };
 
-export const severeEnoughToFail = (results: IRuleResult[], failSeverity: FailSeverity): boolean => {
+export const severeEnoughToFail = (results: IRuleResult[], failSeverity: HumanReadableDiagnosticSeverity): boolean => {
   const diagnosticSeverity = getDiagnosticSeverity(failSeverity);
   return results.some(r => r.severity <= diagnosticSeverity);
 };
-
-export default lintCommand;

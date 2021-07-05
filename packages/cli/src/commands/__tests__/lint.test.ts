@@ -3,7 +3,7 @@ import * as yargs from 'yargs';
 import { DiagnosticSeverity } from '@stoplight/types';
 import { IRuleResult } from '@stoplight/spectral-core';
 import { lint } from '../../services/linter';
-import { formatOutput, writeOutput } from '../../services/output';
+import { formatOutput, writeOutput } from '../../services/linter/output';
 import lintCommand from '../lint';
 
 jest.mock('../../services/output');

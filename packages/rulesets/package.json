@@ -33,8 +33,8 @@
   },
   "devDependencies": {
     "@stoplight/path": "^1.3.2",
-    "@stoplight/spectral-parsers": "^0.0.0",
-    "@stoplight/spectral-ref-resolver": "^0.0.0",
+    "@stoplight/spectral-parsers": "*",
+    "@stoplight/spectral-ref-resolver": "*",
     "immer": "^9.0.5"
   }
 }

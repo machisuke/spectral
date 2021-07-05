@@ -1,10 +1,10 @@
 import { DiagnosticSeverity } from '@stoplight/types';
 import * as fs from 'fs';
-import * as formatters from '../../formatters';
-import { OutputFormat } from '../config';
+import * as formatters from '../../../formatters';
+import { OutputFormat } from '../../../commands/lint/types';
 import { formatOutput, writeOutput } from '../output';
 
-jest.mock('../../formatters');
+jest.mock('../../../formatters');
 jest.mock('fs', () => ({
   ...jest.requireActual<typeof import('fs')>('fs'),
   writeFile: jest.fn(),

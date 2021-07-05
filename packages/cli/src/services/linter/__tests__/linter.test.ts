@@ -1,8 +1,8 @@
 import { join, resolve } from '@stoplight/path';
 import * as nock from 'nock';
 import * as yargs from 'yargs';
-import lintCommand from '../../commands/lint';
-import { lint } from '../linter';
+import lintCommand from '../../../commands/lint';
+import { lint } from '../index';
 import { DiagnosticSeverity } from '@stoplight/types';
 import { RulesetValidationError } from '@stoplight/spectral-core';
 

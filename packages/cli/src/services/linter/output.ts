@@ -2,9 +2,9 @@ import { Dictionary } from '@stoplight/types';
 import { IRuleResult } from '@stoplight/spectral-core';
 import { writeFile } from 'fs';
 import { promisify } from 'util';
-import { html, json, junit, stylish, teamcity, text, pretty } from '../formatters';
-import { Formatter, FormatterOptions } from '../formatters/types';
-import type { OutputFormat } from './config';
+import { html, json, junit, stylish, teamcity, text, pretty } from '../../formatters';
+import { Formatter, FormatterOptions } from '../../formatters/types';
+import type { OutputFormat } from '../../commands/lint/types';
 
 const writeFileAsync = promisify(writeFile);
 

@@ -4,9 +4,15 @@ import { readParsable, IFileReadOptions } from '@stoplight/spectral-runtime';
 import * as Parsers from '@stoplight/spectral-parsers';
 import { getRuleset, listFiles, segregateEntriesPerKind, readFileDescriptor } from './utils';
 import { getResolver } from './utils/getResolver';
-import { ILintConfig } from '../config';
+import { ILintConfig } from '../../commands/lint/types';
 
-export async function lint(documents: Array<number | string>, flags: ILintConfig): Promise<IRuleResult[]> {
+export async function lint(
+  documents: Array<number | string>,
+  flags: Pick<
+    ILintConfig,
+    'encoding' | 'failOnUnmatchedGlobs' | 'ignoreUnknownFormat' | 'ruleset' | 'resolver' | 'stdinFilepath' | 'verbose'
+  >,
+): Promise<IRuleResult[]> {
   const spectral = new Spectral({
     resolver: getResolver(flags.resolver, process.env.PROXY),
   });
@@ -14,10 +20,6 @@ export async function lint(documents: Array<number | string>, flags: ILintConfig
   const ruleset = await getRuleset(flags.ruleset);
 
   spectral.setRuleset(ruleset);
-  if (flags.verbose === true) {
-    const rules = Object.values(ruleset.rules);
-    console.info(`Found ${rules.length} rules (${rules.filter(rule => rule.enabled).length} enabled)`);
-  }
 
   const [globs, fileDescriptors] = segregateEntriesPerKind(documents);
   const [targetUris, unmatchedPatterns] = await listFiles(globs, !flags.failOnUnmatchedGlobs);
@@ -28,8 +30,10 @@ export async function lint(documents: Array<number | string>, flags: ILintConfig
       throw new Error(`Unmatched glob patterns: \`${unmatchedPatterns.join(',')}\``);
     }
 
-    for (const unmatchedPattern of unmatchedPatterns) {
-      console.log(`Glob pattern \`${unmatchedPattern}\` did not match any files`);
+    if (flags.verbose === true) {
+      for (const unmatchedPattern of unmatchedPatterns) {
+        console.log(`Glob pattern \`${unmatchedPattern}\` did not match any files`);
+      }
     }
   }
 

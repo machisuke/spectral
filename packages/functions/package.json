@@ -34,6 +34,6 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@stoplight/spectral-parsers": "^0.0.0"
+    "@stoplight/spectral-parsers": "*"
   }
 }
