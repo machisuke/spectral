@@ -22,6 +22,7 @@
     "postbuild": "node -r esm ./scripts/inline-version.mjs"
   },
   "dependencies": {
+    "@babel/runtime": "^7.15.3",
     "@stoplight/better-ajv-errors": "0.2.0",
     "@stoplight/json": "3.15.0",
     "@stoplight/lifecycle": "2.3.2",
@@ -36,10 +37,11 @@
     "blueimp-md5": "2.18.0",
     "expression-eval": "4.0.0",
     "json-schema": "0.3.0",
-    "jsonpath-plus": "5.0.7",
+    "jsonpath-plus": "6.0.1",
     "lodash": "~4.17.21",
+    "lodash.topath": "^4.5.2",
     "minimatch": "3.0.4",
-    "nimma": "0.0.0",
+    "nimma": "p0lip/nimma#2bbca1be53a9fe63bdbb5d7ff89e175646897db3",
     "tslib": "~2.3.0"
   },
   "devDependencies": {
