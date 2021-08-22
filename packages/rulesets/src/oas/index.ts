@@ -30,13 +30,15 @@ export { ruleset as default };
 const ruleset = {
   documentationUrl: 'https://meta.stoplight.io/docs/spectral/docs/reference/openapi-rules.md',
   formats: [oas2, oas3, oas3_0, oas3_1],
+  aliases: {
+    PathItem: '$.paths[*][get,put,post,delete,options,head,patch,trace]',
+  },
   rules: {
     'operation-success-response': {
       description: 'Operation must have at least one "2xx" or "3xx" response.',
       recommended: true,
       type: 'style',
-      given:
-        "$.paths[*][?( @property === 'get' || @property === 'put' || @property === 'post' || @property === 'delete' || @property === 'options' || @property === 'head' || @property === 'patch' || @property === 'trace' )]",
+      given: '#PathItem',
       then: {
         field: 'responses',
         function: oasOpSuccessResponse,
@@ -48,8 +50,7 @@ const ruleset = {
       recommended: true,
       formats: [oas2],
       type: 'validation',
-      given:
-        "$.paths[*][?( @property === 'get' || @property === 'put' || @property === 'post' || @property === 'delete' || @property === 'options' || @property === 'head' || @property === 'patch' || @property === 'trace' )]",
+      given: '#PathItem',
       then: {
         function: oasOpFormDataConsumeCheck,
       },
@@ -69,8 +70,7 @@ const ruleset = {
       message: '{{error}}',
       recommended: true,
       type: 'validation',
-      given:
-        "$.paths[*][?( @property === 'get' || @property === 'put' || @property === 'post' || @property === 'delete' || @property === 'options' || @property === 'head' || @property === 'patch' || @property === 'trace' )].parameters",
+      given: '#PathItem.parameters',
       then: {
         function: oasOpParams,
       },
@@ -185,7 +185,7 @@ const ruleset = {
       description: 'Markdown descriptions must not have "eval(".',
       recommended: true,
       type: 'style',
-      given: "$..[?(@property === 'description' || @property === 'title')]",
+      given: '$..[description,title]',
       then: {
         function: pattern,
         functionOptions: {
@@ -197,7 +197,7 @@ const ruleset = {
       description: 'Markdown descriptions must not have "<script>" tags.',
       recommended: true,
       type: 'style',
-      given: "$..[?(@property === 'description' || @property === 'title')]",
+      given: '$..[description,title]',
       then: {
         function: pattern,
         functionOptions: {
@@ -239,8 +239,7 @@ const ruleset = {
       description: 'Operation "description" must be present and non-empty string.',
       recommended: true,
       type: 'style',
-      given:
-        "$.paths[*][?( @property === 'get' || @property === 'put' || @property === 'post' || @property === 'delete' || @property === 'options' || @property === 'head' || @property === 'patch' || @property === 'trace' )]",
+      given: '#PathItem',
       then: {
         field: 'description',
         function: truthy,
@@ -250,8 +249,7 @@ const ruleset = {
       description: 'Operation must have "operationId".',
       recommended: true,
       type: 'style',
-      given:
-        "$.paths[*][?( @property === 'get' || @property === 'put' || @property === 'post' || @property === 'delete' || @property === 'options' || @property === 'head' || @property === 'patch' || @property === 'trace' )]",
+      given: '#PathItem',
       then: {
         field: 'operationId',
         function: truthy,
@@ -261,8 +259,7 @@ const ruleset = {
       message: 'operationId must not characters that are invalid when used in URL.',
       recommended: true,
       type: 'validation',
-      given:
-        "$.paths[*][?( @property === 'get' || @property === 'put' || @property === 'post' || @property === 'delete' || @property === 'options' || @property === 'head' || @property === 'patch' || @property === 'trace' )]",
+      given: '#PathItem',
       then: {
         field: 'operationId',
         function: pattern,
@@ -275,8 +272,7 @@ const ruleset = {
       description: 'Operation must not have more than a single tag.',
       recommended: false,
       type: 'style',
-      given:
-        "$.paths[*][?( @property === 'get' || @property === 'put' || @property === 'post' || @property === 'delete' || @property === 'options' || @property === 'head' || @property === 'patch' || @property === 'trace' )]",
+      given: '#PathItem',
       then: {
         field: 'tags',
         function: length,
@@ -289,8 +285,7 @@ const ruleset = {
       description: 'Operation must have non-empty "tags" array.',
       recommended: true,
       type: 'style',
-      given:
-        "$.paths[*][?( @property === 'get' || @property === 'put' || @property === 'post' || @property === 'delete' || @property === 'options' || @property === 'head' || @property === 'patch' || @property === 'trace' )]",
+      given: '#PathItem',
       then: {
         field: 'tags',
         function: truthy,
@@ -460,7 +455,7 @@ const ruleset = {
       severity: 0,
       type: 'validation',
       given: [
-        "$..definitions..[?(@property !== 'properties' && @ && (@.example !== void 0 || @['x-example'] !== void 0 || @.default !== void 0) && (@.enum || @.type || @.format || @.$ref || @.properties || @.items))]",
+        "$.definitions..[?(@property !== 'properties' && @ && (@.example !== void 0 || @['x-example'] !== void 0 || @.default !== void 0) && (@.enum || @.type || @.format || @.$ref || @.properties || @.items))]",
         "$..parameters..[?(@property !== 'properties' && @ && (@.example !== void 0 || @['x-example'] !== void 0 || @.default !== void 0) && (@.enum || @.type || @.format || @.$ref || @.properties || @.items))]",
         "$..responses..[?(@property !== 'properties' && @ && (@.example !== void 0 || @['x-example'] !== void 0 || @.default !== void 0) && (@.enum || @.type || @.format || @.$ref || @.properties || @.items))]",
       ],
@@ -566,10 +561,10 @@ const ruleset = {
       type: 'style',
       given: [
         '$.components.examples[*]',
-        '$.paths[*][*]..content[*].examples[*]',
-        '$.paths[*][*]..parameters[*].examples[*]',
+        '#PathItem..content[*].examples[*]',
+        '#PathItem..parameters[*].examples[*]',
         '$.components.parameters[*].examples[*]',
-        '$.paths[*][*]..headers[*].examples[*]',
+        '#PathItem..headers[*].examples[*]',
         '$.components.headers[*].examples[*]',
       ],
       then: {
@@ -598,7 +593,7 @@ const ruleset = {
       recommended: false,
       formats: [oas3],
       type: 'style',
-      given: "$..[?(@parentProperty !== 'links' && @.parameters)]['parameters'].[?(@.in)]",
+      given: ['#PathItem.parameters[?(@.in)]', '$.components.parameters[?(@.in)]'],
       then: {
         field: 'description',
         function: truthy,

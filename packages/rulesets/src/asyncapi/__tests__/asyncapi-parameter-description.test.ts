@@ -22,6 +22,16 @@ const document = {
   },
 };
 
+console.log(
+  JSON.stringify(
+    produce(document, (draft: any) => {
+      delete draft.channels['users/{userId}/signedUp'].parameters.userId.description;
+    }),
+    null,
+    2,
+  ),
+);
+
 testRule('asyncapi-parameter-description', [
   {
     name: 'valid case',
