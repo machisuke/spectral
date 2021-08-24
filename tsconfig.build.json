@@ -4,9 +4,6 @@
   "composite": true,
   "references": [
     {
-      "path": "./packages/cli/tsconfig.build.json"
-    },
-    {
       "path": "./packages/core/tsconfig.build.json"
     },
     {

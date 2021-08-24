@@ -24,10 +24,11 @@
     "url": "https://github.com/stoplightio/spectral.git"
   },
   "scripts": {
+    "build": "webpack",
     "build.binary": "pkg . --output ./binaries/spectral",
     "build.windows": "pkg . --targets windows --out-path ./binaries",
     "build.nix": "pkg . --targets linux,macos,alpine --out-path ./binaries",
-    "postbuild": "copyfiles -u 1 \"./src/formatters/html/*.html\" \"./dist/\"",
+    "postbuild": "copyfiles -u 3 \"./src/formatters/html/*.html\" \"./dist/\"",
     "cli": "node -r ts-node/register/transpile-only -r tsconfig-paths/register src/index.ts",
     "cli:debug": "node -r ts-node/register/transpile-only -r tsconfig-paths/register --inspect-brk src/index.ts"
   },
@@ -60,6 +61,9 @@
     "nock": "^12.0.2",
     "node-html-parser": "^3.3.5",
     "pkg": "^5.2.1",
+    "ts-loader": "^9.2.5",
+    "webpack": "^5.51.1",
+    "webpack-cli": "^4.8.0",
     "xml2js": "^0.4.23"
   },
   "pkg": {
@@ -68,7 +72,7 @@
     ],
     "assets": [
       "./dist/**/*.json",
-      "./dist/**/*.html"
+      "./dist/*.html"
     ]
   }
 }
