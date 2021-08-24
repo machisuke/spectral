@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   mode: 'production',
@@ -9,11 +10,15 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',
     library: {
-      type: 'commonjs2',
+      type: 'commonjs',
     },
   },
+  externalsType: 'node-commonjs',
+  externals: /^@stoplight\/spectral-(functions|rulesets|formats)/,
+  externalsPresets: {
+    node: true,
+  },
   cache: {
-    compression: false,
     allowCollectingMemory: true,
     type: 'filesystem',
     buildDependencies: {
@@ -54,13 +59,9 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.js'],
     alias: {
-      'nimma/legacy': path.join(
-        __dirname,
-        '../../node_modules/nimma/dist',
-        process.version.slice(1, 3) === '12' ? 'legacy' : '',
-        'esm/index.mjs',
-      ),
-      'nimma/fallbacks': path.join(__dirname, '../../node_modules/nimma/dist/esm/fallbacks/index.mjs'),
+      nimma$: path.join(__dirname, '../../node_modules/nimma/dist/esm/index.mjs'),
+      'nimma/legacy$': path.join(__dirname, '../../node_modules/nimma/dist/esm/index.mjs'),
+      'nimma/fallbacks$': path.join(__dirname, '../../node_modules/nimma/dist/esm/fallbacks/index.mjs'),
     },
   },
   performance: {
@@ -73,6 +74,14 @@ module.exports = {
   node: {
     // __dirname: true,
   },
+  plugins: [
+    new webpack.IgnorePlugin({
+      resourceRegExp: /iconv-lite/,
+    }),
+    new webpack.IgnorePlugin({
+      resourceRegExp: /degenerator/,
+    }),
+  ],
   optimization: {
     chunkIds: 'size',
     moduleIds: 'size',
