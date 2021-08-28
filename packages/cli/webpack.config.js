@@ -14,7 +14,6 @@ module.exports = {
     },
   },
   externalsType: 'node-commonjs',
-  externals: /^@stoplight\/spectral-(functions|rulesets|formats)/,
   externalsPresets: {
     node: true,
   },

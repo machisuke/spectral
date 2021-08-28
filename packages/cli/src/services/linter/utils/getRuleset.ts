@@ -5,6 +5,9 @@ import * as path from '@stoplight/path';
 import * as process from 'process';
 import { extname } from '@stoplight/path';
 import { migrateRuleset } from '@stoplight/spectral-ruleset-migrator';
+import { createRequire } from 'module';
+
+const req = createRequire(__filename);
 
 // eslint-disable-next-line @typescript-eslint/require-await
 const AsyncFunction = (async (): Promise<void> => void 0).constructor as FunctionConstructor;
@@ -46,7 +49,7 @@ export async function getRuleset(rulesetFile: Optional<string>): Promise<Ruleset
         fs,
       }),
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-    )(m, (id: string) => require(require.resolve(id, { paths })) as unknown);
+    )(m, (id: string) => req(req.resolve(id, { paths })) as unknown);
 
     ruleset = m.exports;
   } else {
