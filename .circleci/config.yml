@@ -11,9 +11,6 @@ executors:
 commands:
   cached-dependencies:
     parameters:
-      os:
-        type: string
-        default: linux
       flags:
         type: string
         default: ''
@@ -21,13 +18,13 @@ commands:
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
-            - yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
+            - yarn-packages-{{ arch }}-{{ checksum "yarn.lock" }}
       - run:
           name: Install Dependencies
           command: yarn --frozen-lockfile --cache-folder $HOME/.cache/yarn << parameters.flags >>
       - save_cache:
           name: Save Yarn Package Cache
-          key: yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
+          key: yarn-packages-{{ arch }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
 
@@ -64,6 +61,7 @@ commands:
           name: Lint commit messages
           command: |
             echo "$(git log -1 --pretty=format:"%s")" | npx commitlint
+
 
   test-node:
     parameters:
@@ -133,7 +131,6 @@ jobs:
     steps:
       - checkout
       - cached-dependencies:
-          os: windows
           flags: "--ignore-engines"
       - run: yarn build
       - test-node:
@@ -156,7 +153,6 @@ jobs:
       name: windows/default
     steps:
       - cached-dependencies:
-          os: windows
           flags: "--ignore-engines"
       - run: yarn build
       - run: yarn workspace @stoplight/spectral-cli build.windows
@@ -230,6 +226,13 @@ jobs:
       - prepare-release
       - run: yarn release
 
+  release-cli:
+    docker:
+      - image: circleci/node:14
+    steps:
+      - prepare-release
+      - run: yarn release
+
   upload-artifacts:
     docker:
       - image: circleci/golang:1-stretch
@@ -257,35 +260,42 @@ workflows:
       - test-browser
       - lint
 
-  release:
-    jobs:
-      - build-nix-binaries:
-         filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
-      - build-windows-binary:
-            filters:
-              branches:
-                ignore: /.*/
-              tags:
-                only: /^v.*/
-      - upload-artifacts:
+  scheduled-cli-release:
+    triggers:
+      - schedule:
+          cron: "0 0 1-7,15-21 * 4"
           filters:
             branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
+              only:
+                - develop
+    jobs:
+      - lint
+      - test-node:
+          matrix:
+            parameters:
+              node-version:
+                - "12.21"
+                - lts
+                - current
+          requires:
+            - lint
+      - test-windows:
+          requires:
+            - lint
+      - build-nix-binaries:
+          requires:
+            - test-node
+      - build-windows-binary:
+          requires:
+            - test-windows
+      - release-cli:
           requires:
             - build-nix-binaries
             - build-windows-binary
+      - upload-artifacts:
+          requires:
+            - release-cli
       - release-docker:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
           requires:
             - upload-artifacts
 

@@ -1,0 +1,8 @@
+-  "@stoplight/spectral-parsers"
+-  "@stoplight/spectral-runtime"
+-  "@stoplight/spectral-ref-resolver"
+-  "@stoplight/spectral-core"
+-  "@stoplight/spectral-formats"
+-  "@stoplight/spectral-functions"
+-  "@stoplight/spectral-rulesets"
+-  "@stoplight/spectral-ruleset-migrator"

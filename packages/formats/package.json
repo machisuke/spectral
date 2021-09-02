@@ -19,7 +19,7 @@
     "node": ">=12"
   },
   "dependencies": {
-    "@stoplight/json": "3.15.0",
+    "@stoplight/json": "3.17.0",
     "@stoplight/spectral-core": "^1.1.0",
     "@stoplight/types": "12.3.0",
     "@types/json-schema": "^7.0.7"
