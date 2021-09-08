@@ -1,0 +1,32 @@
+====test====
+Https work
+====document====
+id: aBc
+====asset:ruleset.mjs====
+import upperCase from './upper-case.mjs';
+
+export default {
+  rules: {
+    'upper-case-rule': {
+      given: '$.id',
+      then: {
+        function: upperCase,
+      },
+    },
+  },
+};
+====asset:upper-case.mjs====
+import { upperCase } from 'https://cdn.skypack.dev/lodash'
+
+export default (input) => {
+  if (input !== upperCase(input)) {
+    return [{ message: 'must be upper case' }];
+  }
+}
+====command====
+{bin} lint {document} --ruleset "{asset:ruleset.mjs}"
+====stdout====
+{document}
+ 1:5  warning  upper-case-rule  must be upper case  id
+
+✖ 1 problem (0 errors, 1 warning, 0 infos, 0 hints)

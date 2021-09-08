@@ -5,19 +5,34 @@ import * as path from '@stoplight/path';
 import * as process from 'process';
 import { extname } from '@stoplight/path';
 import { migrateRuleset } from '@stoplight/spectral-ruleset-migrator';
+import { bundleRuleset } from '@stoplight/spectral-ruleset-bundler';
+import { node } from '@stoplight/spectral-ruleset-bundler/presets/node';
+import { fetch } from '@stoplight/spectral-runtime';
+import { stdin } from '@stoplight/spectral-ruleset-bundler/plugins/stdin';
+import { createRequire } from 'module';
 
-// eslint-disable-next-line @typescript-eslint/require-await
-const AsyncFunction = (async (): Promise<void> => void 0).constructor as FunctionConstructor;
+const DEFAULT_RULESETS = [
+  'spectral.mjs',
+  'spectral.js',
+  'spectral.cjs',
+  'spectral.json',
+  'spectral.yaml',
+  'spectral.yml',
+].flatMap(name => [`.${name}`, name]);
 
 async function getDefaultRulesetFile(): Promise<Optional<string>> {
   const cwd = process.cwd();
-  for (const filename of await fs.promises.readdir(cwd)) {
-    if (Ruleset.isDefaultRulesetFile(filename)) {
-      return path.join(cwd, filename);
-    }
+  const files = await fs.promises.readdir(cwd);
+  const found = DEFAULT_RULESETS.find(ruleset => files.includes(ruleset));
+  if (found === void 0) {
+    return;
   }
 
-  return;
+  return path.join(process.cwd(), found);
+}
+
+function isLegacyRuleset(filepath: string): boolean {
+  return /\.(json|ya?ml)$/.test(extname(filepath));
 }
 
 export async function getRuleset(rulesetFile: Optional<string>): Promise<Ruleset> {
@@ -33,32 +48,46 @@ export async function getRuleset(rulesetFile: Optional<string>): Promise<Ruleset
     );
   }
 
-  let ruleset;
+  let ruleset: string;
 
-  if (/(json|ya?ml)$/.test(extname(rulesetFile))) {
-    const m: { exports?: RulesetDefinition } = {};
-    const paths = [path.dirname(rulesetFile), __dirname];
+  if (isLegacyRuleset(rulesetFile)) {
+    const migratedRuleset = await migrateRuleset(rulesetFile, {
+      format: 'esm',
+      fs,
+    });
 
-    await AsyncFunction(
-      'module, require',
-      await migrateRuleset(rulesetFile, {
-        format: 'commonjs',
-        fs,
-      }),
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-    )(m, (id: string) => require(require.resolve(id, { paths })) as unknown);
+    rulesetFile = path.join(path.dirname(rulesetFile), '.spectral.js');
 
-    ruleset = m.exports;
+    ruleset = await bundleRuleset(rulesetFile, {
+      target: 'node',
+      format: 'commonjs',
+      plugins: [stdin(migratedRuleset, rulesetFile), ...node({ fs, fetch })],
+    });
   } else {
-    const imported = (await import(rulesetFile)) as { default: unknown } | unknown;
-    ruleset =
-      typeof imported === 'object' && imported !== null && 'default' in imported
-        ? (imported as Record<'default', unknown>).default
-        : imported;
+    ruleset = await bundleRuleset(rulesetFile, {
+      target: 'node',
+      format: 'commonjs',
+      plugins: node({ fs, fetch }),
+    });
   }
 
-  return new Ruleset(ruleset, {
+  return new Ruleset(evaluate(ruleset, rulesetFile), {
     severity: 'recommended',
     source: rulesetFile,
   });
+}
+
+function evaluate(source: string, uri: string): RulesetDefinition {
+  const req = createRequire(uri);
+  const m: { exports?: RulesetDefinition } = {};
+  const paths = [path.dirname(uri), __dirname];
+
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval
+  Function('module, require', source)(m, (id: string) => req(req.resolve(id, { paths })) as unknown);
+
+  if (typeof m.exports !== 'object' || m.exports === null) {
+    throw Error('No valid export found');
+  }
+
+  return m.exports;
 }
