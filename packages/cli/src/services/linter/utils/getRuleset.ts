@@ -3,13 +3,14 @@ import { Ruleset, RulesetDefinition } from '@stoplight/spectral-core';
 import * as fs from 'fs';
 import * as path from '@stoplight/path';
 import * as process from 'process';
-import { extname } from '@stoplight/path';
+import { extname, isURL } from '@stoplight/path';
 import { migrateRuleset } from '@stoplight/spectral-ruleset-migrator';
 import { bundleRuleset } from '@stoplight/spectral-ruleset-bundler';
 import { node } from '@stoplight/spectral-ruleset-bundler/presets/node';
 import { fetch } from '@stoplight/spectral-runtime';
 import { stdin } from '@stoplight/spectral-ruleset-bundler/plugins/stdin';
 import { createRequire } from 'module';
+import * as commonjs from '@rollup/plugin-commonjs';
 
 const DEFAULT_RULESETS = [
   'spectral.mjs',
@@ -56,18 +57,20 @@ export async function getRuleset(rulesetFile: Optional<string>): Promise<Ruleset
       fs,
     });
 
-    rulesetFile = path.join(path.dirname(rulesetFile), '.spectral.js');
+    rulesetFile = isURL(rulesetFile) ? '/.spectral.js' : path.join(path.dirname(rulesetFile), '.spectral.js');
 
-    ruleset = await bundleRuleset(rulesetFile, {
+    ruleset = await bundleRuleset('<stdin>', {
       target: 'node',
       format: 'commonjs',
-      plugins: [stdin(migratedRuleset, rulesetFile), ...node({ fs, fetch })],
+      // @ts-ignore
+      plugins: [stdin(migratedRuleset), commonjs(), ...node({ fs, fetch })],
     });
   } else {
     ruleset = await bundleRuleset(rulesetFile, {
       target: 'node',
       format: 'commonjs',
-      plugins: node({ fs, fetch }),
+      // @ts-ignore
+      plugins: [commonjs(), ...node({ fs, fetch })],
     });
   }
 

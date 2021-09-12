@@ -1,5 +1,11 @@
 import { JsonPath } from '@stoplight/types';
-import { decodeSegmentFragment, getClosestJsonPath, printPath, PrintStyle } from '@stoplight/spectral-runtime';
+import {
+  decodeSegmentFragment,
+  getClosestJsonPath,
+  printPath,
+  PrintStyle,
+  printValue,
+} from '@stoplight/spectral-runtime';
 import { get } from 'lodash';
 
 import { Document } from '../document';
@@ -62,7 +68,22 @@ function processTargetResults(
   rule: Rule,
   targetPath: JsonPath,
 ): void {
+  if (!Array.isArray(results)) {
+    throw new InvalidResultError(rule.name, `invalid results. Expected array, received ${printValue(results)}.`);
+  }
+
   for (const result of results) {
+    if ('path' in result && !Array.isArray(result.path)) {
+      throw new InvalidResultError(rule.name, `an invalid path. Expected array, received ${printValue(result.path)}.`);
+    }
+
+    if (typeof result.message !== 'string') {
+      throw new InvalidResultError(
+        rule.name,
+        `an invalid message. Expected string, received ${printValue(result.message)}.`,
+      );
+    }
+
     const escapedJsonPath = (result.path ?? targetPath).map(decodeSegmentFragment);
     const associatedItem = context.documentInventory.findAssociatedItemForPath(escapedJsonPath, rule.resolved);
     const path = associatedItem?.path ?? getClosestJsonPath(context.documentInventory.resolved, escapedJsonPath);
@@ -100,5 +121,11 @@ function processTargetResults(
       ...(source !== null ? { source } : null),
       range,
     });
+  }
+}
+
+class InvalidResultError extends Error {
+  constructor(name: string, message: string) {
+    super(`The function for the ${name} rule returned ${message}`);
   }
 }

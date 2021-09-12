@@ -1,9 +1,11 @@
 import { Dictionary } from '@stoplight/types';
 import { pick } from 'lodash';
 import { ReadStream } from 'tty';
+import * as process from 'process';
 import type { CommandModule } from 'yargs';
-
 import { getDiagnosticSeverity, IRuleResult } from '@stoplight/spectral-core';
+import * as chalk from 'chalk';
+
 import { lint } from '../services/linter';
 import { formatOutput, writeOutput } from '../services/output';
 import { FailSeverity, ILintConfig, OutputFormat } from '../services/config';
@@ -161,8 +163,10 @@ const lintCommand: CommandModule = {
   },
 };
 
-const fail = ({ message }: Error): void => {
-  console.error(message);
+const fail = (error: Error | AggregateError): void => {
+  const message = 'errors' in error ? error.errors.map(({ message }) => message).join('\n') : error.message;
+
+  console.log(chalk.red(message));
   process.exitCode = 2;
 };
 

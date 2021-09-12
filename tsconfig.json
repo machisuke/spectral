@@ -21,7 +21,7 @@
     "moduleResolution": "node",
     "target": "ES2019",
     "module": "CommonJS",
-    "lib": ["es2020"],
+    "lib": ["es2020", "es2021.promise"],
     "strict": true,
     "pretty": true,
     "experimentalDecorators": true,
