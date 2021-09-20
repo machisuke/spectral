@@ -2,11 +2,13 @@ import { Dictionary } from '@stoplight/types';
 import { pick } from 'lodash';
 import { ReadStream } from 'tty';
 import type { CommandModule } from 'yargs';
+import * as StackTracey from 'stacktracey';
 
 import { getDiagnosticSeverity, IRuleResult } from '@stoplight/spectral-core';
 import { lint } from '../services/linter';
 import { formatOutput, writeOutput } from '../services/output';
 import { FailSeverity, ILintConfig, OutputFormat } from '../services/config';
+import * as chalk from 'chalk';
 
 const formatOptions = Object.values(OutputFormat);
 
@@ -161,8 +163,25 @@ const lintCommand: CommandModule = {
   },
 };
 
-const fail = ({ message }: Error): void => {
-  console.error(message);
+const fail = (error: Error): void => {
+  if (error.constructor.name === 'RulesetAjvValidationError') {
+    // invalid ruleset
+  }
+  console.error(chalk.red(`Error running Spectral! ${error.message}`));
+  console.error(chalk.red(`Use --verbose flag to learn more`));
+  console.error(
+    chalk.red(
+      new StackTracey(error)
+        .slice(0, 10)
+        .withSources()
+        .map(err => {
+          err.fileShort = err.file.replace(/^\/snapshot\//, '/');
+          return err;
+        })
+
+        .asTable(),
+    ),
+  );
   process.exitCode = 2;
 };
 
