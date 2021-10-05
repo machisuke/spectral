@@ -1,5 +1,6 @@
 import { Dictionary, Optional } from '@stoplight/types';
 import * as tmp from 'tmp';
+import * as fs from 'fs';
 
 export const IS_WINDOWS = process.platform === 'win32';
 
@@ -29,7 +30,7 @@ function getItem(input: string[], key: string, required?: boolean): Optional<str
 }
 
 export function parseScenarioFile(data: string): IScenarioFile {
-  const regex = /====(test|document|command(?:-(?:nix|win))?|status|stdout|stderr|env|asset:[a-z0-9.-]+)====\r?\n/gi;
+  const regex = /====(test|document|command(?:-(?:nix|win))?|status|stdout|stderr|env|asset:[a-z0-9./-]+)====\r?\n/gi;
 
   const split = data.split(regex);
 
@@ -97,27 +98,28 @@ function getEnv(env: string): NodeJS.ProcessEnv {
   );
 }
 
-export function tmpFile(opts?: tmp.TmpNameOptions): Promise<tmp.FileResult> {
+export async function tmpFile(opts: tmp.TmpNameOptions & { tmpdir: string }): Promise<tmp.FileResult> {
   return new Promise((resolve, reject) => {
-    tmp.file(
-      {
-        postfix: '.yml',
-        prefix: 'asset-',
-        tries: 10,
-        ...opts,
-      },
-      (err, name, fd, removeCallback) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({
-            name,
-            fd,
-            removeCallback,
-          });
-        }
-      },
-    );
+    fs.promises.mkdir(opts.tmpdir, { recursive: true }).then(() => {
+      tmp.file(
+        {
+          postfix: '.yml',
+          tries: 10,
+          ...opts,
+        },
+        (err, name, fd, removeCallback) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({
+              name,
+              fd,
+              removeCallback,
+            });
+          }
+        },
+      );
+    });
   });
 }
 

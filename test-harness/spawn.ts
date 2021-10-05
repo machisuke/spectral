@@ -5,15 +5,17 @@ import { Transform } from 'stream';
 import Shell = require('node-powershell');
 import { normalizeLineEndings, IS_WINDOWS } from './helpers';
 
-const cwd = join(__dirname, 'scenarios');
-
 export type SpawnReturn = {
   stdout: string;
   stderr: string;
   status: number;
 };
 
-export type SpawnFn = (command: string, env: Optional<typeof process.env>) => Promise<SpawnReturn>;
+export type SpawnFn = (
+  command: string,
+  env: Optional<typeof process.env>,
+  cwd: Optional<string>,
+) => Promise<SpawnReturn>;
 
 const createStream = (): Transform =>
   new Transform({

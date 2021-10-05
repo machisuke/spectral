@@ -1,6 +1,6 @@
 # AsyncAPI Rules
 
-Spectral has a built-in "asyncapi" ruleset for the [AsyncAPI Specification](https://www.asyncapi.com/docs/specifications/2.0.0/).
+Spectral has a built-in "asyncapi" ruleset for the [AsyncAPI Specification](https://www.asyncapi.com/docs/specifications/v2.0.0).
 
 In your ruleset file you can add `extends: "spectral:asyncapi"` and you'll get all of the following rules applied.
 
@@ -89,7 +89,6 @@ info:
   title: Descriptive API
   description: >+
     Some description about the general point of this API, and why it exists when another similar but different API also exists.
-
 ```
 
 ### asyncapi-info-license-url
@@ -314,7 +313,6 @@ tags:
   - name: Invoice Items
     description: |+
       Giant long explanation about what this business concept is, because other people _might_ not have a clue!
-
 ```
 
 **Recommended:** No

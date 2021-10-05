@@ -2,8 +2,9 @@
 // Generated on Tue Jul 02 2019 17:18:30 GMT+0200 (Central European Summer Time)
 
 import type { TransformCallback, TransformContext } from 'karma-typescript';
+import type { Config } from 'karma';
 
-module.exports = (config: any) => {
+module.exports = (config: Config): void => {
   config.set({
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
@@ -13,29 +14,36 @@ module.exports = (config: any) => {
     frameworks: ['jasmine', 'karma-typescript'],
 
     // list of files / patterns to load in the browser
-    files: ['./__karma__/jest.ts', './setupKarma.ts', './setupTests.ts', 'src/**/*.ts'],
+    files: ['./__karma__/jest.ts', 'packages/*/src/**/*.ts'],
 
     // list of files / patterns to exclude
-    exclude: ['src/cli/**', 'src/formatters/**', 'src/**/*.jest.test.ts'],
+    exclude: ['packages/cli/**', '**/*.jest.test.ts'],
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'src/**/*.ts': ['karma-typescript', 'env'],
+      'packages/*/src/**/*.ts': ['karma-typescript', 'env'],
       './__karma__/**/*.ts': ['karma-typescript'],
-      './setupKarma.ts': ['karma-typescript'],
-      './setupTests.ts': ['karma-typescript'],
     },
 
+    // @ts-expect-error: non-standard - karma-env-preprocessor
     envPreprocessor: ['USE_NIMMA'],
 
     karmaTypescriptConfig: {
       ...require('./tsconfig.json'),
       include: ['**/*.ts'],
+      exclude: ['node_modules'],
       bundlerOptions: {
         resolve: {
           alias: {
+            '@stoplight/spectral-test-utils': require.resolve('./test-utils/browser/index.js'),
+            nimma: require.resolve('./node_modules/nimma/dist/legacy/cjs/index.js'),
+            'nimma/fallbacks': require.resolve('./node_modules/nimma/dist/legacy/cjs/fallbacks/index.js'),
+            'nimma/legacy': require.resolve('./node_modules/nimma/dist/legacy/cjs/index.js'),
             'node-fetch': require.resolve('./__karma__/fetch'),
+            fs: require.resolve('./__karma__/fs'),
+            process: require.resolve('./__karma__/process'),
+            fsevents: require.resolve('./__karma__/fsevents'),
           },
         },
         acornOptions: {

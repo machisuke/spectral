@@ -1,5 +1,5 @@
 [![Demo of Spectral linting an OpenAPI document from the CLI](./docs/img/readme-header.svg)](https://stoplight.io/api-governance?utm_source=github&utm_medium=spectral&utm_campaign=readme)
-[![CircleCI](https://img.shields.io/circleci/build/github/stoplightio/spectral/master)](https://circleci.com/gh/stoplightio/spectral) [![NPM Downloads](https://img.shields.io/npm/dw/@stoplight/spectral?color=blue)](https://www.npmjs.com/package/@stoplight/spectral) [![Treeware (Trees)](https://img.shields.io/treeware/trees/stoplightio/spectral)](https://plant.treeware.earth/stoplightio/spectral)
+[![CircleCI](https://img.shields.io/circleci/build/github/stoplightio/spectral/master)](https://circleci.com/gh/stoplightio/spectral) [![NPM Downloads](https://img.shields.io/npm/dw/@stoplight/spectral?color=blue)](https://www.npmjs.com/package/@stoplight/spectral) [![Stoplight Forest](https://img.shields.io/ecologi/trees/stoplightinc)][stoplight_forest]
 
 - **Custom Rulesets**: Create custom rules to lint JSON or YAML objects
 - **Ready-to-use Rulesets**: Validate and lint **OpenAPI v2 & v3** and **AsyncAPI** Documents
@@ -13,7 +13,8 @@
 # Overview
 
 - [Installation and Usage](#-installation-and-Usage)
-- [Documentation and Community](#-documentation-and-community)
+- [Documentation](#-documentation)
+- [Support](#-support)
 - [FAQs](#-faqs)
 - [Contributing](#-contributing)
 
@@ -22,14 +23,26 @@
 **Install**
 
 ```bash
-npm install -g @stoplight/spectral
+npm install -g @stoplight/spectral-cli
 
 # OR
 
-yarn global add @stoplight/spectral
+yarn global add @stoplight/spectral-cli
 ```
 
 Find more [installation methods](https://meta.stoplight.io/docs/spectral/docs/getting-started/2-installation.md) in our documentation.
+
+**Create a Ruleset**
+
+Spectral, being a generic YAML/JSON linter, needs a ruleset in order to be able to lint files.
+You can learn more about the rulesets [here](./docs/getting-started/3-rulesets.md).
+
+If you intend to lint an OpenAPI or AsyncAPI document, we have a few predefined rulesets you can extend to get Spectral up and running.
+To reference them, you can run the following command:
+
+```bash
+echo '{\n\t"extends": ["spectral:oas", "spectral:asyncapi"]\n}' > .spectral.json
+```
 
 **Lint**
 
@@ -37,7 +50,7 @@ Find more [installation methods](https://meta.stoplight.io/docs/spectral/docs/ge
 spectral lint petstore.yaml
 ```
 
-## 📖 Documentation and Community
+## 📖 Documentation
 
 - [Documentation](https://meta.stoplight.io/docs/spectral/docs/getting-started/1-concepts.md)
   - [Getting Started](https://meta.stoplight.io/docs/spectral/docs/getting-started/1-concepts.md) - The basics of Spectral.
@@ -50,7 +63,7 @@ spectral lint petstore.yaml
 
 ## ℹ️ Support
 
-If you need help using Spectral or have a support question, please use [GitHub Discussions](https://github.com/stoplightio/spectral/discussions). It's also a great place to share your rulesets, or tools that leverage Spectral.
+If you need help using Spectral or have any questions, please use [GitHub Discussions](https://github.com/stoplightio/spectral/discussions), or visit the [Stoplight Community Discord](https://discord.com/invite/stoplight). These communities are a great place to share your rulesets, or show off tools that leverage Spectral.
 
 If you have a bug or feature request, please [create an issue](https://github.com/stoplightio/spectral/issues).
 
@@ -97,4 +110,6 @@ Spectral is 100% free and open-source, under [Apache License 2.0](LICENSE).
 
 ## 🌲 Sponsor Spectral by Planting a Tree
 
-This package is [Treeware](https://treeware.earth) so if you would like to thank us for creating it, we ask that you [**buy the world a tree**](https://plant.treeware.earth/stoplightio/spectral).
+If you would like to thank us for creating Spectral, we ask that you [**buy the world a tree**][stoplight_forest].
+
+[stoplight_forest]: https://ecologi.com/stoplightinc
