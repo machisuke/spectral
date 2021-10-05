@@ -1,4 +1,3 @@
-import { join } from '@stoplight/path';
 import { Optional } from '@stoplight/types';
 import * as child_process from 'child_process';
 import { Transform } from 'stream';
@@ -47,7 +46,7 @@ function stringifyStream(stream: Transform): Promise<string> {
 
 const r = /(.*)LASTEXITCODE=(.*)\r?\n.*/s;
 
-export const spawnPowershell = async (command: string): Promise<SpawnReturn> => {
+export const spawnPowershell: SpawnFn = async (command, env, cwd): Promise<SpawnReturn> => {
   const ps = new Shell({
     executionPolicy: 'Bypass',
     noProfile: true,
@@ -83,9 +82,9 @@ export const spawnPowershell = async (command: string): Promise<SpawnReturn> => 
   }
 };
 
-export const spawnNode: SpawnFn = async (script, env) => {
+export const spawnNode: SpawnFn = async (script, env, cwd) => {
   if (IS_WINDOWS) {
-    return spawnPowershell(script);
+    return spawnPowershell(script, env, cwd);
   }
 
   const stderr = createStream();

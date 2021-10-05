@@ -3,7 +3,7 @@
 ## Prerequisites
 
 * Install the project dependencies with `yarn`
-* Generate the binary for your platform with `yarn build && yarn build.binary`. This will _also_ compile the project from TS -> JS
+* Generate the binary for your platform with `yarn build.binary`. This will *also* compile the project from TS -> JS
 
 ## Running the suite
 
