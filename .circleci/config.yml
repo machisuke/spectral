@@ -24,7 +24,10 @@ commands:
   cached-dependencies:
     parameters:
       os:
-        type: string
+        type: enum
+        enum:
+          - linux
+          - windows
         default: linux
       flags:
         type: string
@@ -43,25 +46,14 @@ commands:
           paths:
             - ~/.cache/yarn
 
-  cached-pkg:
+  build-binary:
     parameters:
       targets:
         type: string
-      node-version:
-        type: string
     steps:
-      - restore_cache:
-          name: Restore pkg-cache
-          keys:
-            - &pkg-cache-key pkg-cached-node-binaries-<< parameters.targets >>-<<parameters.node-version>>-{{ checksum "packages/cli/package.json" }}
       - run:
-          name: Building Binaries
+          name: Create the Spectral Binary
           command: yarn workspace @stoplight/spectral-cli pkg . --public --targets << parameters.targets >> --output binaries/spectral
-      - save_cache:
-          name: Save pkg-cache
-          key: *pkg-cache-key
-          paths:
-            - ~/.pkg-cache
 
   install-and-build:
     description: >-
@@ -105,13 +97,14 @@ commands:
   test-harness:
     parameters:
       os:
-        type: string
-      node-version:
-        type: string
+        type: enum
+        enum:
+          - linux
+          - windows
+        default: linux
     steps:
-      - cached-pkg:
+      - build-binary:
           targets: << parameters.os >>
-          node-version: << parameters.node-version >>
       - run:
           name: Run harness tests
           command: yarn test.harness
@@ -155,7 +148,6 @@ jobs:
       - test-node
       - test-harness:
           os: linux
-          node-version: << parameters.node-version >>
 
   test-browser:
     docker:
@@ -179,11 +171,10 @@ jobs:
       - run:
           name: Build the code
           command: yarn build
-#      - test-node:
-#          max-workers: 3
+      - test-node:
+          max-workers: 3
       - test-harness:
           os: windows
-          node-version: lts
 
   build-nix-binaries:
     docker:
@@ -191,9 +182,8 @@ jobs:
     steps:
       - checkout
       - install-and-build
-      - cached-pkg:
+      - build-binary:
           targets: linux,macos,alpine
-          node-version: lts
       - persist_to_workspace:
           root: ./packages/cli/
           paths:
@@ -208,9 +198,8 @@ jobs:
           os: windows
           flags: "--ignore-engines"
       - run: yarn build
-      - cached-pkg:
+      - build-binary:
           targets: windows
-          node-version: lts
       - persist_to_workspace:
           root: ./packages/cli/
           paths:
@@ -300,13 +289,13 @@ jobs:
 workflows:
   commit:
     jobs:
-#      - test-node:
-#          matrix:
-#            parameters:
-#              node-version: *node-versions
+      - test-node:
+          matrix:
+            parameters:
+              node-version: *node-versions
       - test-windows
-      # - test-browser
-      # - lint
+      - test-browser
+      - lint
 
   release:
     jobs:
