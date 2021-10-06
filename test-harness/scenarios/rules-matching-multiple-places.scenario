@@ -12,8 +12,10 @@ schemas:
       occupation:
         type: boolean
   address:
-====command====
+====command-nix====
 {bin} lint {document} -r "{asset:ruleset}" --ignore-unknown-format
+====command-win====
+{bin} lint {document} -r "{asset:ruleset}" --ignore-unknown-format true
 ====asset:ruleset====
 const { truthy, pattern } = require("@stoplight/spectral-functions");
 

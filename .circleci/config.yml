@@ -179,8 +179,8 @@ jobs:
       - run:
           name: Build the code
           command: yarn build
-      - test-node:
-          max-workers: 3
+#      - test-node:
+#          max-workers: 3
       - test-harness:
           os: windows
           node-version: lts
