@@ -137,8 +137,4 @@ export const applyReplacements = (str: string, values: Dictionary<string>): stri
   return str.replace(BRACES, replacer);
 };
 
-export const normalizeLineEndings = (str: string): string => {
-  const normalized = str.replace(/\r?\n/g, '\n');
-  const trimmed = normalized.replace(/\n+$/g, '');
-  return trimmed;
-};
+export const normalizeLineEndings = (str: string): string => str.replace(/\r?\n+/g, '');
