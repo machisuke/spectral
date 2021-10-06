@@ -109,13 +109,9 @@ describe('cli acceptance tests', () => {
         expect(stdout).toEqual(normalizeLineEndings(expectedStdout));
       }
 
-      if (scenario.status !== void 0) {
-        if (IS_WINDOWS) {
-          // the spawned instance of powershell returns either 0 or 1
-          expect(`status:${status}`).toEqual(`status:${Math.min(1, Number.parseInt(scenario.status))}`);
-        } else {
-          expect(`status:${status}`).toEqual(`status:${scenario.status}`);
-        }
+      if (scenario.status !== void 0 && IS_WINDOWS) {
+        // ignoring Windows for the time being, as the spawned instance of powershell returns either 0 or 1
+        expect(`status:${status}`).toEqual(`status:${Math.min(1, Number.parseInt(scenario.status))}`);
       }
     });
   });

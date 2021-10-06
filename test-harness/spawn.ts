@@ -55,7 +55,7 @@ export const spawnPowershell: SpawnFn = async (command, env, cwd): Promise<Spawn
   });
 
   const winCommand = command.replace(/\/binaries\/(spectral\.exe|spectral)/, '/binaries/spectral.exe');
-  const wrappedCommand = `cd '${cwd}';${winCommand};echo LASTEXITCODE=$?`;
+  const wrappedCommand = `cd '${cwd}';${winCommand};echo LASTEXITCODE=$LASTEXITCODE`;
   const finalCommand = `powershell -Command "& { ${wrappedCommand} }"`;
 
   await ps.addCommand(finalCommand);
@@ -68,7 +68,6 @@ export const spawnPowershell: SpawnFn = async (command, env, cwd): Promise<Spawn
       throw new Error('No LASTEXITCODE has been found in the output.');
     }
 
-    console.log('code', splitted[2], splitted);
     return {
       stderr: '',
       stdout: normalizeLineEndings(splitted[1].trim()),
