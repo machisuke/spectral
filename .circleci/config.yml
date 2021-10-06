@@ -33,13 +33,13 @@ commands:
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
-            - yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
+            - &yarn-cache-key yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
       - run:
           name: Install Dependencies
           command: yarn --frozen-lockfile --cache-folder $HOME/.cache/yarn << parameters.flags >>
       - save_cache:
           name: Save Yarn Package Cache
-          key: yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
+          key: *yarn-cache-key
           paths:
             - ~/.cache/yarn
 
@@ -47,17 +47,16 @@ commands:
     parameters:
       targets:
         type: string
+      node-version:
+        type: string
     steps:
       - restore_cache:
           name: Restore pkg-cache
           keys:
-            - &pkg-cache-key pkg-cached-node-binaries-<< parameters.targets >>-{{ checksum "packages/cli/package.json" }}
+            - &pkg-cache-key pkg-cached-node-binaries-<< parameters.targets >>-<<parameters.node-version>>-{{ checksum "packages/cli/package.json" }}
       - run:
           name: Building Binaries
-          command: |
-            export PKG_CACHE_PATH=$HOME/.pkg-cache
-            echo $PKG_CACHE_PATH
-            yarn workspace @stoplight/spectral-cli pkg . --public --targets << parameters.targets >> --output binaries/spectral
+          command: yarn workspace @stoplight/spectral-cli pkg . --public --targets << parameters.targets >> --output binaries/spectral
       - save_cache:
           name: Save pkg-cache
           key: *pkg-cache-key
@@ -104,9 +103,15 @@ commands:
           command: yarn test.jest --coverage --maxWorkers=<< parameters.max-workers >>
 
   test-harness:
+    parameters:
+      os:
+        type: string
+      node-version:
+        type: string
     steps:
       - cached-pkg:
-          targets: ''
+          targets: << parameters.os >>
+          node-version: << parameters.node-version >>
       - run:
           name: Run harness tests
           command: yarn test.harness
@@ -123,7 +128,9 @@ commands:
             git checkout HEAD -- package.json
 
       - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-      - run: yarn build
+      - run:
+          name: Build the code
+          command: yarn build
 
 jobs:
   lint:
@@ -146,7 +153,9 @@ jobs:
       - checkout
       - install-and-build
       - test-node
-      - test-harness
+      - test-harness:
+          os: linux
+          node-version: << parameters.node-version >>
 
   test-browser:
     docker:
@@ -167,10 +176,14 @@ jobs:
       - cached-dependencies:
           os: windows
           flags: "--ignore-engines"
-      - run: yarn build
+      - run:
+          name: Build the code
+          command: yarn build
       - test-node:
           max-workers: 3
-      - test-harness
+      - test-harness:
+          os: windows
+          node-version: lts
 
   build-nix-binaries:
     docker:
@@ -180,6 +193,7 @@ jobs:
       - install-and-build
       - cached-pkg:
           targets: linux,macos,alpine
+          node-version: lts
       - persist_to_workspace:
           root: ./packages/cli/
           paths:
@@ -196,6 +210,7 @@ jobs:
       - run: yarn build
       - cached-pkg:
           targets: windows
+          node-version: lts
       - persist_to_workspace:
           root: ./packages/cli/
           paths:
