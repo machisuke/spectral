@@ -44,7 +44,7 @@ function stringifyStream(stream: Transform): Promise<string> {
   });
 }
 
-const r = /(.*)LASTEXITCODE=(.*)\r?\n.*/s;
+const r = /(.*)LASTEXITCODE=(.*)/s;
 
 export const spawnPowershell: SpawnFn = async (command, env, cwd): Promise<SpawnReturn> => {
   const ps = new Shell({
@@ -68,12 +68,12 @@ export const spawnPowershell: SpawnFn = async (command, env, cwd): Promise<Spawn
 
     return {
       stderr: '',
-      stdout: normalizeLineEndings(splitted[1]),
+      stdout: normalizeLineEndings(splitted[1].trim()),
       status: Number(splitted[2]),
     };
   } catch (err) {
     return {
-      stderr: normalizeLineEndings(err.message),
+      stderr: normalizeLineEndings(err.message.replace(r, '$1').trim()),
       stdout: '',
       status: 1,
     };
