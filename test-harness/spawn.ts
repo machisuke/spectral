@@ -68,10 +68,11 @@ export const spawnPowershell: SpawnFn = async (command, env, cwd): Promise<Spawn
       throw new Error('No LASTEXITCODE has been found in the output.');
     }
 
+    console.log('code', splitted[2], splitted);
     return {
       stderr: '',
       stdout: normalizeLineEndings(splitted[1].trim()),
-      status: Number(splitted[2]),
+      status: Number.parseInt(splitted[2]),
     };
   } catch (err) {
     return {
