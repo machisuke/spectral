@@ -300,13 +300,13 @@ jobs:
 workflows:
   commit:
     jobs:
-      - test-node:
-          matrix:
-            parameters:
-              node-version: *node-versions
+#      - test-node:
+#          matrix:
+#            parameters:
+#              node-version: *node-versions
       - test-windows
-      - test-browser
-      - lint
+      # - test-browser
+      # - lint
 
   release:
     jobs:

@@ -72,8 +72,6 @@ export const spawnPowershell: SpawnFn = async (command, env, cwd): Promise<Spawn
       status: Number(splitted[2]),
     };
   } catch (err) {
-    console.log(Object.getOwnPropertyNames(err));
-    console.log('error', err);
     return {
       stderr: normalizeLineEndings(err.message.replace(r, '$1').trim()),
       stdout: '',
