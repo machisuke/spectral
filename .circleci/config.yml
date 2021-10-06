@@ -43,6 +43,27 @@ commands:
           paths:
             - ~/.cache/yarn
 
+  cached-pkg:
+    parameters:
+      targets:
+        type: string
+    steps:
+      - restore_cache:
+          name: Restore pkg-cache
+          keys:
+            - &pkg-cache-key pkg-cached-node-binaries-<< parameters.targets >>-{{ checksum "packages/cli/package.json" }}
+      - run:
+          name: Building Binaries
+          command: |
+            export PKG_CACHE_PATH=$HOME/.pkg-cache
+            echo $PKG_CACHE_PATH
+            yarn workspace @stoplight/spectral-cli pkg . --public --targets << parameters.targets >> --output binaries/spectral
+      - save_cache:
+          name: Save pkg-cache
+          key: *pkg-cache-key
+          paths:
+            - ~/.pkg-cache
+
   install-and-build:
     description: >-
       Build everything required to run the test suite
@@ -84,9 +105,8 @@ commands:
 
   test-harness:
     steps:
-      - run:
-          name: Create the Spectral Binary
-          command: yarn workspace @stoplight/spectral-cli build.binary
+      - cached-pkg:
+          targets: ''
       - run:
           name: Run harness tests
           command: yarn test.harness
@@ -158,7 +178,8 @@ jobs:
     steps:
       - checkout
       - install-and-build
-      - run: yarn workspace @stoplight/spectral-cli build.nix
+      - cached-pkg:
+          targets: linux,macos,alpine
       - persist_to_workspace:
           root: ./packages/cli/
           paths:
@@ -173,7 +194,8 @@ jobs:
           os: windows
           flags: "--ignore-engines"
       - run: yarn build
-      - run: yarn workspace @stoplight/spectral-cli build.windows
+      - cached-pkg:
+          targets: windows
       - persist_to_workspace:
           root: ./packages/cli/
           paths:
