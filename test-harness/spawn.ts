@@ -50,6 +50,8 @@ export const spawnPowershell: SpawnFn = async (command, env, cwd): Promise<Spawn
   const ps = new Shell({
     executionPolicy: 'Bypass',
     noProfile: true,
+    inputEncoding: 'utf8',
+    outputEncoding: 'utf8',
   });
 
   const winCommand = command.replace(/\/binaries\/(spectral\.exe|spectral)/, '/binaries/spectral.exe');
